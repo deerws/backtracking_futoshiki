@@ -1,0 +1,254 @@
+% Resolvedor Futoshiki em Prolog
+% Implementação usando backtracking com propagação de restrições
+
+:- use_module(library(clpfd)).
+
+% Predicado principal para resolver Futoshiki
+solve_futoshiki(Grid, Solution) :-
+    % Inicializa grid 9x9 com domínios de 1 a 9
+    length(Grid, 9),
+    maplist(same_length(Grid), Grid),
+    append(Grid, Vars),
+    Vars ins 1..9,
+    
+    % Aplica restrições de linha (todas diferentes)
+    maplist(all_different, Grid),
+    
+    % Aplica restrições de coluna (todas diferentes)
+    transpose(Grid, Columns),
+    maplist(all_different, Columns),
+    
+    % Aplica restrições de subgrade 3x3
+    apply_subgrid_constraints(Grid),
+    
+    % Aplica restrições de comparação (futoshiki)
+    apply_comparison_constraints(Grid),
+    
+    % Resolve usando estratégia de busca otimizada
+    labeling([ff, bisect], Vars),
+    
+    Solution = Grid.
+
+% Aplica restrições de subgrade 3x3
+apply_subgrid_constraints(Grid) :-
+    forall(between(0, 2, I),
+           forall(between(0, 2, J),
+                  subgrid_constraint(Grid, I, J))).
+
+subgrid_constraint(Grid, I, J) :-
+    StartRow is I * 3,
+    StartCol is J * 3,
+    EndRow is StartRow + 2,
+    EndCol is StartCol + 2,
+    findall(Cell,
+            (between(StartRow, EndRow, R),
+             between(StartCol, EndCol, C),
+             nth0(R, Grid, Row),
+             nth0(C, Row, Cell)),
+            SubGrid),
+    all_different(SubGrid).
+
+% Aplica todas as restrições de comparação do Futoshiki
+apply_comparison_constraints(Grid) :-
+    % Restrições horizontais (linha por linha)
+    apply_row_constraints(Grid),
+    % Restrições verticais (coluna por coluna)
+    apply_column_constraints(Grid).
+
+% Restrições horizontais para cada linha
+apply_row_constraints(Grid) :-
+    % Linha 0
+    nth0(0, Grid, Row0),
+    nth0(0, Row0, C00), nth0(1, Row0, C01), C00 #< C01,
+    nth0(1, Row0, C01), nth0(2, Row0, C02), C01 #> C02,
+    nth0(3, Row0, C03), nth0(4, Row0, C04), C03 #< C04,
+    nth0(4, Row0, C04), nth0(5, Row0, C05), C04 #< C05,
+    nth0(6, Row0, C06), nth0(7, Row0, C07), C06 #> C07,
+    nth0(7, Row0, C07), nth0(8, Row0, C08), C07 #> C08,
+    
+    % Linha 1
+    nth0(1, Grid, Row1),
+    nth0(0, Row1, C10), nth0(1, Row1, C11), C10 #< C11,
+    nth0(1, Row1, C11), nth0(2, Row1, C12), C11 #< C12,
+    nth0(3, Row1, C13), nth0(4, Row1, C14), C13 #< C14,
+    nth0(4, Row1, C14), nth0(5, Row1, C15), C14 #> C15,
+    nth0(6, Row1, C16), nth0(7, Row1, C17), C16 #> C17,
+    nth0(7, Row1, C17), nth0(8, Row1, C18), C17 #< C18,
+    
+    % Linha 2
+    nth0(2, Grid, Row2),
+    nth0(0, Row2, C20), nth0(1, Row2, C21), C20 #< C21,
+    nth0(1, Row2, C21), nth0(2, Row2, C22), C21 #< C22,
+    nth0(3, Row2, C23), nth0(4, Row2, C24), C23 #< C24,
+    nth0(4, Row2, C24), nth0(5, Row2, C25), C24 #> C25,
+    nth0(6, Row2, C26), nth0(7, Row2, C27), C26 #> C27,
+    nth0(7, Row2, C27), nth0(8, Row2, C28), C27 #< C28,
+    
+    % Linha 3
+    nth0(3, Grid, Row3),
+    nth0(0, Row3, C30), nth0(1, Row3, C31), C30 #> C31,
+    nth0(1, Row3, C31), nth0(2, Row3, C32), C31 #> C32,
+    nth0(3, Row3, C33), nth0(4, Row3, C34), C33 #> C34,
+    nth0(4, Row3, C34), nth0(5, Row3, C35), C34 #< C35,
+    nth0(6, Row3, C36), nth0(7, Row3, C37), C36 #< C37,
+    nth0(7, Row3, C37), nth0(8, Row3, C38), C37 #> C38,
+    
+    % Linha 4
+    nth0(4, Grid, Row4),
+    nth0(0, Row4, C40), nth0(1, Row4, C41), C40 #> C41,
+    nth0(1, Row4, C41), nth0(2, Row4, C42), C41 #< C42,
+    nth0(3, Row4, C43), nth0(4, Row4, C44), C43 #> C44,
+    nth0(4, Row4, C44), nth0(5, Row4, C45), C44 #< C45,
+    nth0(6, Row4, C46), nth0(7, Row4, C47), C46 #> C47,
+    nth0(7, Row4, C47), nth0(8, Row4, C48), C47 #> C48,
+    
+    % Linha 5
+    nth0(5, Grid, Row5),
+    nth0(0, Row5, C50), nth0(1, Row5, C51), C50 #< C51,
+    nth0(1, Row5, C51), nth0(2, Row5, C52), C51 #> C52,
+    nth0(3, Row5, C53), nth0(4, Row5, C54), C53 #< C54,
+    nth0(4, Row5, C54), nth0(5, Row5, C55), C54 #> C55,
+    nth0(6, Row5, C56), nth0(7, Row5, C57), C56 #> C57,
+    nth0(7, Row5, C57), nth0(8, Row5, C58), C57 #< C58,
+    
+    % Linha 6
+    nth0(6, Grid, Row6),
+    nth0(0, Row6, C60), nth0(1, Row6, C61), C60 #< C61,
+    nth0(1, Row6, C61), nth0(2, Row6, C62), C61 #> C62,
+    nth0(3, Row6, C63), nth0(4, Row6, C64), C63 #> C64,
+    nth0(4, Row6, C64), nth0(5, Row6, C65), C64 #> C65,
+    nth0(6, Row6, C66), nth0(7, Row6, C67), C66 #< C67,
+    nth0(7, Row6, C67), nth0(8, Row6, C68), C67 #> C68,
+    
+    % Linha 7
+    nth0(7, Grid, Row7),
+    nth0(0, Row7, C70), nth0(1, Row7, C71), C70 #> C71,
+    nth0(1, Row7, C71), nth0(2, Row7, C72), C71 #< C72,
+    nth0(3, Row7, C73), nth0(4, Row7, C74), C73 #> C74,
+    nth0(4, Row7, C74), nth0(5, Row7, C75), C74 #< C75,
+    nth0(6, Row7, C76), nth0(7, Row7, C77), C76 #< C77,
+    nth0(7, Row7, C77), nth0(8, Row7, C78), C77 #< C78,
+    
+    % Linha 8
+    nth0(8, Grid, Row8),
+    nth0(0, Row8, C80), nth0(1, Row8, C81), C80 #< C81,
+    nth0(1, Row8, C81), nth0(2, Row8, C82), C81 #> C82,
+    nth0(3, Row8, C83), nth0(4, Row8, C84), C83 #< C84,
+    nth0(4, Row8, C84), nth0(5, Row8, C85), C84 #< C85,
+    nth0(6, Row8, C86), nth0(7, Row8, C87), C86 #< C87,
+    nth0(7, Row8, C87), nth0(8, Row8, C88), C87 #> C88.
+
+% Restrições verticais para cada coluna
+apply_column_constraints(Grid) :-
+    % Coluna 0
+    nth0(0, Grid, Row0), nth0(0, Row0, C00),
+    nth0(1, Grid, Row1), nth0(0, Row1, C10), C00 #> C10,
+    nth0(2, Grid, Row2), nth0(0, Row2, C20), C10 #< C20,
+    nth0(3, Grid, Row3), nth0(0, Row3, C30),
+    nth0(4, Grid, Row4), nth0(0, Row4, C40), C30 #> C40,
+    nth0(5, Grid, Row5), nth0(0, Row5, C50), C40 #> C50,
+    nth0(6, Grid, Row6), nth0(0, Row6, C60),
+    nth0(7, Grid, Row7), nth0(0, Row7, C70), C60 #> C70,
+    nth0(8, Grid, Row8), nth0(0, Row8, C80), C70 #< C80,
+    
+    % Coluna 1
+    nth0(0, Grid, Row0), nth0(1, Row0, C01),
+    nth0(1, Grid, Row1), nth0(1, Row1, C11), C01 #< C11,
+    nth0(2, Grid, Row2), nth0(1, Row2, C21), C11 #< C21,
+    nth0(3, Grid, Row3), nth0(1, Row3, C31),
+    nth0(4, Grid, Row4), nth0(1, Row4, C41), C31 #< C41,
+    nth0(5, Grid, Row5), nth0(1, Row5, C51), C41 #< C51,
+    nth0(6, Grid, Row6), nth0(1, Row6, C61),
+    nth0(7, Grid, Row7), nth0(1, Row7, C71), C61 #> C71,
+    nth0(8, Grid, Row8), nth0(1, Row8, C81), C71 #< C81,
+    
+    % Coluna 2
+    nth0(0, Grid, Row0), nth0(2, Row0, C02),
+    nth0(1, Grid, Row1), nth0(2, Row1, C12), C02 #< C12,
+    nth0(2, Grid, Row2), nth0(2, Row2, C22), C12 #< C22,
+    nth0(3, Grid, Row3), nth0(2, Row3, C32),
+    nth0(4, Grid, Row4), nth0(2, Row4, C42), C32 #< C42,
+    nth0(5, Grid, Row5), nth0(2, Row5, C52), C42 #< C52,
+    nth0(6, Grid, Row6), nth0(2, Row6, C62),
+    nth0(7, Grid, Row7), nth0(2, Row7, C72), C62 #> C72,
+    nth0(8, Grid, Row8), nth0(2, Row8, C82), C72 #> C82,
+    
+    % Coluna 3
+    nth0(0, Grid, Row0), nth0(3, Row0, C03),
+    nth0(1, Grid, Row1), nth0(3, Row1, C13), C03 #> C13,
+    nth0(2, Grid, Row2), nth0(3, Row2, C23), C13 #< C23,
+    nth0(3, Grid, Row3), nth0(3, Row3, C33),
+    nth0(4, Grid, Row4), nth0(3, Row4, C43), C33 #> C43,
+    nth0(5, Grid, Row5), nth0(3, Row5, C53), C43 #< C53,
+    nth0(6, Grid, Row6), nth0(3, Row6, C63),
+    nth0(7, Grid, Row7), nth0(3, Row7, C73), C63 #< C73,
+    nth0(8, Grid, Row8), nth0(3, Row8, C83), C73 #> C83,
+    
+    % Coluna 4
+    nth0(0, Grid, Row0), nth0(4, Row0, C04),
+    nth0(1, Grid, Row1), nth0(4, Row1, C14), C04 #> C14,
+    nth0(2, Grid, Row2), nth0(4, Row2, C24), C14 #> C24,
+    nth0(3, Grid, Row3), nth0(4, Row3, C34),
+    nth0(4, Grid, Row4), nth0(4, Row4, C44), C34 #> C44,
+    nth0(5, Grid, Row5), nth0(4, Row5, C54), C44 #< C54,
+    nth0(6, Grid, Row6), nth0(4, Row6, C64),
+    nth0(7, Grid, Row7), nth0(4, Row7, C74), C64 #> C74,
+    nth0(8, Grid, Row8), nth0(4, Row8, C84), C74 #> C84,
+    
+    % Coluna 5
+    nth0(0, Grid, Row0), nth0(5, Row0, C05),
+    nth0(1, Grid, Row1), nth0(5, Row1, C15), C05 #> C15,
+    nth0(2, Grid, Row2), nth0(5, Row2, C25), C15 #> C25,
+    nth0(3, Grid, Row3), nth0(5, Row3, C35),
+    nth0(4, Grid, Row4), nth0(5, Row4, C45), C35 #> C45,
+    nth0(5, Grid, Row5), nth0(5, Row5, C55), C45 #> C55,
+    nth0(6, Grid, Row6), nth0(5, Row6, C65),
+    nth0(7, Grid, Row7), nth0(5, Row7, C75), C65 #> C75,
+    nth0(8, Grid, Row8), nth0(5, Row8, C85), C75 #< C85,
+    
+    % Coluna 6
+    nth0(0, Grid, Row0), nth0(6, Row0, C06),
+    nth0(1, Grid, Row1), nth0(6, Row1, C16), C06 #< C16,
+    nth0(2, Grid, Row2), nth0(6, Row2, C26), C16 #> C26,
+    nth0(3, Grid, Row3), nth0(6, Row3, C36),
+    nth0(4, Grid, Row4), nth0(6, Row4, C46), C36 #< C46,
+    nth0(5, Grid, Row5), nth0(6, Row5, C56), C46 #> C56,
+    nth0(6, Grid, Row6), nth0(6, Row6, C66),
+    nth0(7, Grid, Row7), nth0(6, Row7, C76), C66 #< C76,
+    nth0(8, Grid, Row8), nth0(6, Row8, C86), C76 #> C86,
+    
+    % Coluna 7
+    nth0(0, Grid, Row0), nth0(7, Row0, C07),
+    nth0(1, Grid, Row1), nth0(7, Row1, C17), C07 #> C17,
+    nth0(2, Grid, Row2), nth0(7, Row2, C27), C17 #> C27,
+    nth0(3, Grid, Row3), nth0(7, Row3, C37),
+    nth0(4, Grid, Row4), nth0(7, Row4, C47), C37 #> C47,
+    nth0(5, Grid, Row5), nth0(7, Row5, C57), C47 #> C57,
+    nth0(6, Grid, Row6), nth0(7, Row6, C67),
+    nth0(7, Grid, Row7), nth0(7, Row7, C77), C67 #< C77,
+    nth0(8, Grid, Row8), nth0(7, Row8, C87), C77 #< C87,
+    
+    % Coluna 8
+    nth0(0, Grid, Row0), nth0(8, Row0, C08),
+    nth0(1, Grid, Row1), nth0(8, Row1, C18), C08 #< C18,
+    nth0(2, Grid, Row2), nth0(8, Row2, C28), C18 #> C28,
+    nth0(3, Grid, Row3), nth0(8, Row3, C38),
+    nth0(4, Grid, Row4), nth0(8, Row4, C48), C38 #< C48,
+    nth0(5, Grid, Row5), nth0(8, Row5, C58), C48 #> C58,
+    nth0(6, Grid, Row6), nth0(8, Row6, C68),
+    nth0(7, Grid, Row7), nth0(8, Row7, C78), C68 #< C78,
+    nth0(8, Grid, Row8), nth0(8, Row8, C88), C78 #> C88.
+
+% Predicado utilitário para exibir a grade de forma organizada
+print_grid([]).
+print_grid([Row|Rest]) :-
+    format('~w~n', [Row]),
+    print_grid(Rest).
+
+% Predicado principal para execução
+solve_example :-
+    solve_futoshiki(Grid, Solution),
+    write('Solução encontrada:'), nl,
+    print_grid(Solution).
+
+% Para executar: ?- solve_example.
