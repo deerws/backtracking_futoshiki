@@ -1,7 +1,0 @@
-0 < 0 x 0 > 0
-^ x ^ x v x v
-0 > 0 x 0 < 0
-x x x x x x x
-0 < 0 x 0 > 0
-v x v x ^ x ^
-0 < 0 x 0 < 0
