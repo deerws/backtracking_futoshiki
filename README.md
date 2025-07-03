@@ -78,9 +78,9 @@ Example output (Python):
 - Inequality constraints are enforced between adjacent cells as specified.
 
 ## Contributors
-- Renan Igor de Lima Ferreira (23104230)
-- Pedro Henrique Broering Zimmermann (23103753)
-- André Pinheiro Paes (23205038)
+- André Pinheiro Paes
+- Renan Igor de Lima Ferreira
+- Pedro Henrique Broering Zimmermann
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
